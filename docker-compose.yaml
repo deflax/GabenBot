@@ -1,7 +1,7 @@
 version: "3.4"
 services:
   gaben:    
-    container_name: gaben
+    container_name: gaben-bot
     env_file:
       - .env
     build:      
@@ -9,7 +9,9 @@ services:
       dockerfile: ./Dockerfile
     depends_on: [ esdb ]        
   esdb:
+    container_name: gaben-esdb
     image: eventstore/eventstore:20.10.2-buster-slim
+    user: "${UID}:${GID}"
     environment:
       - EVENTSTORE_CLUSTER_SIZE=1
       - EVENTSTORE_RUN_PROJECTIONS=All
@@ -23,13 +25,6 @@ services:
       - "1113:1113"
       - "2113:2113"
     volumes:
-      - type: volume
-        source: eventstore-volume-data
-        target: /var/lib/eventstore
-      - type: volume
-        source: eventstore-volume-logs
-        target: /var/log/eventstore
+      - "./data/esdb:/var/lib/eventstore"
+      - "./logs/esdb:/var/log/eventstore"
 
-volumes:
-  eventstore-volume-data:
-  eventstore-volume-logs:
