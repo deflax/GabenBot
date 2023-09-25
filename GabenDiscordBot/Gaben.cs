@@ -10,12 +10,12 @@ public class Gaben
 
     private static readonly Dictionary<string, int> _responses = new()
     {
-        {"**EIIIII GABEN**",  10 },
-        {"**GABEEEEEEN**",  10 },
-        {"**MmmmMMm GABEEEEEN**",  10 },
-        {"<:gaben:703198078836015154>",  10 },
-        {"**GAAABEEN <:gaben:703198078836015154>**",  10 },
-        {"**prysnat <:suspect:589057771933138945>**",  10 },
+        {"**EIIIII GABEN**",  30 },
+        {"**GABEEEEEEN**",  30 },
+        {"**MmmmMMm GABEEEEEN**",  30 },
+        {"<:gaben:703198078836015154>",  30 },
+        {"**GAAABEEN <:gaben:703198078836015154>**",  30 },
+        {"**prysnat <:suspect:589057771933138945>**",  30 },
         {  "||<:EDU:588721771373658123><:gaben:703198078836015154><:EDU:588721771373658123><:TOPKEK:588721771310743572>||",4 },
         {  "||<:gaben:703198078836015154> FREE MMR <:gaben:703198078836015154>||",4 },
         {  @"""
