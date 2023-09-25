@@ -1,0 +1,9 @@
+# .dockerignore
+
+Dockerfile
+[b|B]in
+[O|o]bj
+
+docker-compose.yaml
+data
+logs

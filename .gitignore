@@ -478,3 +478,8 @@ $RECYCLE.BIN/
 
 # Appsettings
 appsettings.json
+.env
+
+# Docker
+data/
+logs/
