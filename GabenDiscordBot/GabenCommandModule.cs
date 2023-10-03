@@ -51,7 +51,7 @@ public class GabenCommandModule : BaseCommandModule
         // Print out the reaction counts
 
         var topReactionsString = new StringBuilder("Top reactions are:\n");
-        var zz = await GGWP(ctx.Guild.Id, reactions.Select(x => x.Key).ToList());
+        var zz = await GetEmojis(ctx.Guild.Id, reactions.Select(x => x.Key).ToList());
         int counter = 0;
         foreach (var kvp in reactions)
         {
@@ -112,6 +112,116 @@ public class GabenCommandModule : BaseCommandModule
             catch (Exception)
             {
 
+            }
+        }
+
+        await DiscordClient.SendMessageAsync(ctx.Channel, topUsersString.ToString());
+    }
+
+
+    [Command("copespammer")]
+    public async Task GetCopeSpammer(CommandContext ctx)
+    {
+        var events = await GetEventsAsync();
+
+        // Create a dictionary to hold the counts of reactions a user received
+        var userReactionsCount = new Dictionary<string, int>();
+
+        // Loop through each event
+        foreach (var ev in events)
+        {
+            string jsonString = Encoding.UTF8.GetString(ev.Event.Data.ToArray());
+            // Deserialize the event data to a dynamic object
+            ReactionAdded eventData = JsonSerializer.Deserialize<ReactionAdded>(jsonString);
+
+            if (eventData is null || eventData.ReactionName.Equals("copium") == false)
+                continue;
+
+            // Get the user id of the user who was reacted on
+            string reactorId = eventData.ReactorId;
+
+            // If the user id is not already in the dictionary, add it
+            if (!userReactionsCount.ContainsKey(reactorId))
+            {
+                userReactionsCount[reactorId] = 0;
+            }
+
+            // Increment the count for this user
+            userReactionsCount[reactorId]++;
+        }
+
+        var topUsers = userReactionsCount.OrderByDescending(x => x.Value).Take(10);
+
+        // Build a message to display the top users
+        var copiumEmoji = await GetEmoji(ctx.Guild.Id, "copium");
+        var topUsersString = new StringBuilder($"Top 10 <:{"copium"}:{copiumEmoji.ToString()}>spammers are:\n");
+        int counter = 0;
+
+        foreach (var kvp in topUsers)
+        {
+            try
+            {
+                var user = await DiscordClient.GetUserAsync(ulong.Parse(kvp.Key));
+                topUsersString.AppendLine($"{counter + 1}. {user.Username} - {kvp.Value}");
+                counter++;
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        await DiscordClient.SendMessageAsync(ctx.Channel, topUsersString.ToString());
+
+    }
+
+    [Command("copelord")]
+    public async Task GetCopelord(CommandContext ctx)
+    {
+        var events = await GetEventsAsync();
+
+        // Create a dictionary to hold the counts of reactions a user received
+        var userReactionsCount = new Dictionary<string, int>();
+
+        // Loop through each event
+        foreach (var ev in events)
+        {
+            string jsonString = Encoding.UTF8.GetString(ev.Event.Data.ToArray());
+            // Deserialize the event data to a dynamic object
+            ReactionAdded eventData = JsonSerializer.Deserialize<ReactionAdded>(jsonString);
+
+            if (eventData is null || eventData.ReactionName.Equals("copium") == false)
+                continue;
+
+            // Get the user id of the user who was reacted on
+            string reactedOnId = eventData.ReactedOnId;
+
+            // If the user id is not already in the dictionary, add it
+            if (!userReactionsCount.ContainsKey(reactedOnId))
+            {
+                userReactionsCount[reactedOnId] = 0;
+            }
+
+            // Increment the count for this user
+            userReactionsCount[reactedOnId]++;
+        }
+
+        var topUsers = userReactionsCount.OrderByDescending(x => x.Value).Take(10);
+
+        // Build a message to display the top users
+        var copiumEmoji = await GetEmoji(ctx.Guild.Id, "copium");
+        var topUsersString = new StringBuilder($"Top 10 <:{"copium"}:{copiumEmoji.ToString()}>lords are:\n");
+        int counter = 0;
+
+        foreach (var kvp in topUsers)
+        {
+            try
+            {
+                var user = await DiscordClient.GetUserAsync(ulong.Parse(kvp.Key));
+                topUsersString.AppendLine($"{counter + 1}. {user.Username} - {kvp.Value}");
+                counter++;
+            }
+            catch (Exception)
+            {
             }
         }
 
@@ -181,7 +291,7 @@ public class GabenCommandModule : BaseCommandModule
         return events;
     }
 
-    private async Task<Dictionary<string, ulong>> GGWP(ulong guildId, List<string> emojisToGet)
+    private async Task<Dictionary<string, ulong>> GetEmojis(ulong guildId, List<string> emojisToGet)
     {
         Dictionary<string, ulong> emojiIds = new Dictionary<string, ulong>();
         var guild = await DiscordRestClient.GetGuildAsync(guildId);
@@ -200,5 +310,15 @@ public class GabenCommandModule : BaseCommandModule
         }
 
         return emojiIds;
+    }
+
+    private async Task<ulong> GetEmoji(ulong guildId, string emojiToGet)
+    {
+        var guild = await DiscordRestClient.GetGuildAsync(guildId);
+        KeyValuePair<ulong, DSharpPlus.Entities.DiscordEmoji> emojiMetadata = guild.Emojis.SingleOrDefault(x => x.Value.Name.ToString().Equals(emojiToGet, StringComparison.OrdinalIgnoreCase));
+        if (emojiMetadata.Value is null == false)
+            return emojiMetadata.Value.Id;
+
+        return 0;
     }
 }
