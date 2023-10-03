@@ -12,6 +12,10 @@ using DSharpPlus;
 
 public class GabenCommandModule : BaseCommandModule
 {
+    private const string Spammer = "spammers";
+    private const string Lord = "lords";
+    private const string CopiumEmoji = "copium";
+
     public EventStoreClient EventStoreClient { private get; set; }
     public DiscordClient DiscordClient { private get; set; }
     public DiscordRestClient DiscordRestClient { private get; set; }
@@ -66,170 +70,43 @@ public class GabenCommandModule : BaseCommandModule
         await DiscordClient.SendMessageAsync(ctx.Channel, topReactionsString.ToString());
     }
 
-    [Command("memer")]
-    public async Task GetMemer(CommandContext ctx)
+    [Command("memespammer")]
+    public async Task GetMemeSpammer(CommandContext ctx)
     {
-        var events = await GetEventsAsync();
+        var messageBuilder = new StringBuilder("Top 10 users who reacted are:\n");
 
-        // Create a dictionary to hold the counts of reactions a user received
-        var userReactionsCounts = new Dictionary<string, int>();
-
-        // Loop through each event
-        foreach (var ev in events)
-        {
-            string jsonString = Encoding.UTF8.GetString(ev.Event.Data.ToArray());
-            // Deserialize the event data to a dynamic object
-            ReactionAdded eventData = JsonSerializer.Deserialize<ReactionAdded>(jsonString);
-
-            // Get the user id of the user who was reacted on
-            string reactedOnUserId = eventData.ReactedOnId;
-
-            // If the user id is not already in the dictionary, add it
-            if (!userReactionsCounts.ContainsKey(reactedOnUserId))
-            {
-                userReactionsCounts[reactedOnUserId] = 0;
-            }
-
-            // Increment the count for this user
-            userReactionsCounts[reactedOnUserId]++;
-        }
-
-        // Get the top 10 users with the most reactions
-        var topUsers = userReactionsCounts.OrderByDescending(x => x.Value).Take(10);
-
-        // Build a message to display the top users
-        var topUsersString = new StringBuilder("Top 10 users reacted on are:\n");
-        int counter = 0;
-
-        foreach (var kvp in topUsers)
-        {
-            try
-            {
-                var user = await DiscordClient.GetUserAsync(ulong.Parse(kvp.Key));
-                topUsersString.AppendLine($"{counter + 1}. {user.Username} - {kvp.Value}");
-                counter++;
-            }
-            catch (Exception)
-            {
-
-            }
-        }
-
-        await DiscordClient.SendMessageAsync(ctx.Channel, topUsersString.ToString());
+        await GetTopUsersByReaction(ctx, Spammer, messageBuilder);
     }
 
+    [Command("memelord")]
+    public async Task GetMemeLord(CommandContext ctx)
+    {
+        var messageBuilder = new StringBuilder("Top 10 users reacted on are:\n");
+
+        await GetTopUsersByReaction(ctx, Lord, messageBuilder);
+    }
 
     [Command("copespammer")]
     public async Task GetCopeSpammer(CommandContext ctx)
     {
-        var events = await GetEventsAsync();
+        var copiumEmoji = await GetEmoji(ctx.Guild.Id, CopiumEmoji);
 
-        // Create a dictionary to hold the counts of reactions a user received
-        var userReactionsCount = new Dictionary<string, int>();
+        var messageBuilder = new StringBuilder($"Top 10 <:{CopiumEmoji}:{copiumEmoji}>{Lord} are:\n");
 
-        // Loop through each event
-        foreach (var ev in events)
-        {
-            string jsonString = Encoding.UTF8.GetString(ev.Event.Data.ToArray());
-            // Deserialize the event data to a dynamic object
-            ReactionAdded eventData = JsonSerializer.Deserialize<ReactionAdded>(jsonString);
-
-            if (eventData is null || eventData.ReactionName.Equals("copium") == false)
-                continue;
-
-            // Get the user id of the user who was reacted on
-            string reactorId = eventData.ReactorId;
-
-            // If the user id is not already in the dictionary, add it
-            if (!userReactionsCount.ContainsKey(reactorId))
-            {
-                userReactionsCount[reactorId] = 0;
-            }
-
-            // Increment the count for this user
-            userReactionsCount[reactorId]++;
-        }
-
-        var topUsers = userReactionsCount.OrderByDescending(x => x.Value).Take(10);
-
-        // Build a message to display the top users
-        var copiumEmoji = await GetEmoji(ctx.Guild.Id, "copium");
-        var topUsersString = new StringBuilder($"Top 10 <:{"copium"}:{copiumEmoji.ToString()}>spammers are:\n");
-        int counter = 0;
-
-        foreach (var kvp in topUsers)
-        {
-            try
-            {
-                var user = await DiscordClient.GetUserAsync(ulong.Parse(kvp.Key));
-                topUsersString.AppendLine($"{counter + 1}. {user.Username} - {kvp.Value}");
-                counter++;
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        await DiscordClient.SendMessageAsync(ctx.Channel, topUsersString.ToString());
-
+        await GetTopUsersByReaction(ctx, Spammer, messageBuilder, CopiumEmoji);
     }
 
     [Command("copelord")]
     public async Task GetCopelord(CommandContext ctx)
     {
-        var events = await GetEventsAsync();
+        var copiumEmoji = await GetEmoji(ctx.Guild.Id, CopiumEmoji);
 
-        // Create a dictionary to hold the counts of reactions a user received
-        var userReactionsCount = new Dictionary<string, int>();
+        var messageBuilder = new StringBuilder($"Top 10 <:{CopiumEmoji}:{copiumEmoji}>{Lord} are:\n");
 
-        // Loop through each event
-        foreach (var ev in events)
-        {
-            string jsonString = Encoding.UTF8.GetString(ev.Event.Data.ToArray());
-            // Deserialize the event data to a dynamic object
-            ReactionAdded eventData = JsonSerializer.Deserialize<ReactionAdded>(jsonString);
-
-            if (eventData is null || eventData.ReactionName.Equals("copium") == false)
-                continue;
-
-            // Get the user id of the user who was reacted on
-            string reactedOnId = eventData.ReactedOnId;
-
-            // If the user id is not already in the dictionary, add it
-            if (!userReactionsCount.ContainsKey(reactedOnId))
-            {
-                userReactionsCount[reactedOnId] = 0;
-            }
-
-            // Increment the count for this user
-            userReactionsCount[reactedOnId]++;
-        }
-
-        var topUsers = userReactionsCount.OrderByDescending(x => x.Value).Take(10);
-
-        // Build a message to display the top users
-        var copiumEmoji = await GetEmoji(ctx.Guild.Id, "copium");
-        var topUsersString = new StringBuilder($"Top 10 <:{"copium"}:{copiumEmoji.ToString()}>lords are:\n");
-        int counter = 0;
-
-        foreach (var kvp in topUsers)
-        {
-            try
-            {
-                var user = await DiscordClient.GetUserAsync(ulong.Parse(kvp.Key));
-                topUsersString.AppendLine($"{counter + 1}. {user.Username} - {kvp.Value}");
-                counter++;
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        await DiscordClient.SendMessageAsync(ctx.Channel, topUsersString.ToString());
+        await GetTopUsersByReaction(ctx, Lord, messageBuilder, CopiumEmoji);
     }
 
-    [Command("reactor")]
-    public async Task GetReactor(CommandContext ctx)
+    private async Task GetTopUsersByReaction(CommandContext ctx, string userDescriptor, StringBuilder stringBuilder, string? reactionName = null)
     {
         var events = await GetEventsAsync();
 
@@ -243,24 +120,25 @@ public class GabenCommandModule : BaseCommandModule
             // Deserialize the event data to a dynamic object
             ReactionAdded eventData = JsonSerializer.Deserialize<ReactionAdded>(jsonString);
 
-            // Get the user id of the user who was reacted on
-            string reactorId = eventData.ReactorId;
+            if (eventData is null || (reactionName is not null && eventData.ReactionName.Equals(reactionName) == false))
+                continue;
+
+            // Decide which Id to use based on the descriptor
+            string userId = userDescriptor == Spammer ? eventData.ReactorId : eventData.ReactedOnId;
 
             // If the user id is not already in the dictionary, add it
-            if (!userReactionsCount.ContainsKey(reactorId))
+            if (!userReactionsCount.ContainsKey(userId))
             {
-                userReactionsCount[reactorId] = 0;
+                userReactionsCount[userId] = 0;
             }
 
             // Increment the count for this user
-            userReactionsCount[reactorId]++;
+            userReactionsCount[userId]++;
         }
 
-        // Get the top 10 users with the most reactions
         var topUsers = userReactionsCount.OrderByDescending(x => x.Value).Take(10);
 
         // Build a message to display the top users
-        var topUsersString = new StringBuilder("Top 10 users who reacted are:\n");
         int counter = 0;
 
         foreach (var kvp in topUsers)
@@ -268,7 +146,7 @@ public class GabenCommandModule : BaseCommandModule
             try
             {
                 var user = await DiscordClient.GetUserAsync(ulong.Parse(kvp.Key));
-                topUsersString.AppendLine($"{counter + 1}. {user.Username} - {kvp.Value}");
+                stringBuilder.AppendLine($"{counter + 1}. {user.Username} - {kvp.Value}");
                 counter++;
             }
             catch (Exception)
@@ -276,8 +154,9 @@ public class GabenCommandModule : BaseCommandModule
             }
         }
 
-        await DiscordClient.SendMessageAsync(ctx.Channel, topUsersString.ToString());
+        await DiscordClient.SendMessageAsync(ctx.Channel, stringBuilder.ToString());
     }
+
 
     private async Task<List<ResolvedEvent>> GetEventsAsync()
     {
