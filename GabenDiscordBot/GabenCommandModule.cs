@@ -91,7 +91,7 @@ public class GabenCommandModule : BaseCommandModule
     {
         var copiumEmoji = await GetEmoji(ctx.Guild.Id, CopiumEmoji);
 
-        var messageBuilder = new StringBuilder($"Top 10 <:{CopiumEmoji}:{copiumEmoji}>{Lord} are:\n");
+        var messageBuilder = new StringBuilder($"Top 10 <:{CopiumEmoji}:{copiumEmoji}>{Spammer} are:\n");
 
         await GetTopUsersByReaction(ctx, Spammer, messageBuilder, CopiumEmoji);
     }
@@ -104,6 +104,64 @@ public class GabenCommandModule : BaseCommandModule
         var messageBuilder = new StringBuilder($"Top 10 <:{CopiumEmoji}:{copiumEmoji}>{Lord} are:\n");
 
         await GetTopUsersByReaction(ctx, Lord, messageBuilder, CopiumEmoji);
+    }
+
+    [Command("mmr")]
+    public async Task GetMmr(CommandContext ctx)
+    {
+        // Get the events from the event store
+        var events = await GetEventsAsync();
+
+        // Create a dictionary to hold the reaction counts
+        var reactionCounts = new Dictionary<string, int>();
+
+        // Loop through each event
+        foreach (var ev in events)
+        {
+
+            string jsonString = Encoding.UTF8.GetString(ev.Event.Data.ToArray());
+            // Deserialize the event data to a dynamic object
+            ReactionAdded eventData = JsonSerializer.Deserialize<ReactionAdded>(jsonString);
+
+            // Get the reaction name from the event data
+            string reactionName = eventData.ReactionName;
+
+            // If the reaction name is not already in the dictionary, add it
+            if (!reactionCounts.ContainsKey(eventData.ReactedOnId))
+            {
+                reactionCounts[eventData.ReactedOnId] = 0;
+            }
+
+            if (reactionName == "minusmmr")
+                reactionCounts[eventData.ReactedOnId] -= 30;
+
+            if (reactionName == "plusmmr")
+                reactionCounts[eventData.ReactedOnId] += 30;
+        }
+
+        var reactionsToRemove = reactionCounts.Where(x => x.Value == 0);
+
+
+        var reactions = reactionCounts.Except(reactionsToRemove).OrderByDescending(x => x.Value);
+        // Print out the reaction counts
+
+        var UserMmrs = new StringBuilder("Current mmr ladder is :\n");
+        int counter = 0;
+        foreach (var kvp in reactions)
+        {
+            try
+            {
+                var user = await DiscordClient.GetUserAsync(ulong.Parse(kvp.Key));
+                UserMmrs.AppendLine($"{counter + 1}. {user.Username} == {kvp.Value}");
+                counter++;
+            }
+            catch (Exception)
+            {
+                UserMmrs.AppendLine($"could not load for user with id: {kvp.Key} mmr value {kvp.Value}");
+            }
+        }
+
+        await DiscordClient.SendMessageAsync(ctx.Channel, UserMmrs.ToString());
     }
 
     private async Task GetTopUsersByReaction(CommandContext ctx, string userDescriptor, StringBuilder stringBuilder, string? reactionName = null)
