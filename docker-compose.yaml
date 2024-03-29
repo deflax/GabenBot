@@ -2,6 +2,7 @@ version: "3.4"
 services:
   gaben:    
     container_name: gaben-bot
+    restart: unless-stopped
     env_file:
       - .env
     build:      
@@ -10,7 +11,8 @@ services:
     depends_on: [ esdb ]        
   esdb:
     container_name: gaben-esdb
-    image: eventstore/eventstore:20.10.2-buster-slim
+    restart: unless-stopped
+    image: eventstore/eventstore:24.2
     user: "${UID}:${GID}"
     environment:
       - EVENTSTORE_CLUSTER_SIZE=1
